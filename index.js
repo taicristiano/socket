@@ -16,14 +16,23 @@ app.use(express.static(path.join(__dirname, 'src')));
 // Chatroom
 
 var numUsers = 0;
-
+console.log(numUsers);
 io.on('connection', (socket) => {
+    // io.to('room').emit()
+    console.log('a user connected');
     var addedUser = false;
 
     // when the client emits 'new message', this listens and executes
     socket.on('new message', (data) => {
+        console.log(data);
+        // // we tell the client to execute 'new message'
+        // socket.broadcast.to(data.user_to).emit('new message', {
+        //     username: socket.username,
+        //     message: data
+        // });
+
         // we tell the client to execute 'new message'
-        socket.broadcast.emit('new message', {
+        socket.broadcast.emit('room_' + data.user_to, {
             username: socket.username,
             message: data
         });
@@ -37,6 +46,7 @@ io.on('connection', (socket) => {
         socket.username = username;
         ++numUsers;
         addedUser = true;
+        console.log(numUsers);
         socket.emit('login', {
             numUsers: numUsers
         });
@@ -45,6 +55,9 @@ io.on('connection', (socket) => {
             username: socket.username,
             numUsers: numUsers
         });
+    });
+    socket.on('test', (data) => {
+        console.log(data);
     });
 
     // when the client emits 'typing', we broadcast it to others
@@ -64,6 +77,7 @@ io.on('connection', (socket) => {
     // when the user disconnects.. perform this
     socket.on('disconnect', () => {
         if (addedUser) {
+            console.log('a user disconnected');
             --numUsers;
 
             // echo globally that this client has left

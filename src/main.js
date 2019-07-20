@@ -6,7 +6,7 @@ $(function() {
         '#58dc00', '#287b00', '#a8f07a', '#4ae8c4',
         '#3b88eb', '#3824aa', '#a700ff', '#d300e7'
     ];
-
+    var toId = 0;
     // Initialize variables
     var $window = $(window);
     var $usernameInput = $('.usernameInput'); // Input for username
@@ -37,8 +37,10 @@ $(function() {
 
     // Sets the client's username
     const setUsername = () => {
-        username = cleanInput($usernameInput.val().trim());
-
+        var a = cleanInput($usernameInput.val().trim());
+        ar = a.split("_");
+        username = ar[0];
+        toId = ar[1];
         // If the username is valid
         if (username) {
             $loginPage.fadeOut();
@@ -48,6 +50,12 @@ $(function() {
 
             // Tell the server your username
             socket.emit('add user', username);
+
+            id = $usernameInput.val();
+            console.log('id ' + id);
+            socket.on('room_' + ar[0], (data) => {
+                addChatMessage(data);
+            });
         }
     }
 
@@ -61,10 +69,15 @@ $(function() {
             $inputMessage.val('');
             addChatMessage({
                 username: username,
-                message: message
+                message: message,
+                user_to: 1
             });
             // tell server to execute 'new message' and send along one parameter
-            socket.emit('new message', message);
+            socket.emit('new message', {
+                username: username,
+                message: message,
+                user_to: toId
+            });
         }
     }
 
@@ -224,7 +237,10 @@ $(function() {
     });
 
     // Socket events
-
+    socket.emit(1, {
+        username: 'test',
+        message: 'test'
+    });
     // Whenever the server emits 'login', log the login message
     socket.on('login', (data) => {
         connected = true;
@@ -236,10 +252,12 @@ $(function() {
         addParticipantsMessage(data);
     });
 
+    // // Whenever the server emits 'new message', update the chat body
+    // socket.on('new message', (data) => {
+    //     addChatMessage(data);
+    // });
+
     // Whenever the server emits 'new message', update the chat body
-    socket.on('new message', (data) => {
-        addChatMessage(data);
-    });
 
     // Whenever the server emits 'user joined', log it in the chat body
     socket.on('user joined', (data) => {
