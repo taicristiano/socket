@@ -4,26 +4,14 @@ var app     = express();
 var path    = require('path');
 var server  = require('http').createServer(app);
 var io      = require('socket.io')(server);
-var port    = process.env.PORT || 3008;
+var port    = process.env.PORT || 3000;
 var routes  = require('./routes/index')
 
 require('./socket/socket')(io);
+require('dotenv').config()
 
 server.listen(port, () => {
     console.log('Server listening at port %d', port);
-
-    // axios.get('http://localhost/playerduo/public/api/hot-players')
-    // .then(response => {
-    //     for (const key in response.data.data) {
-    //             if (response.data.data.hasOwnProperty(key)) {
-    //                 const element = response.data.data[key];
-    //                 console.log(element.user.avatar);
-    //         }
-    //     }
-    // })
-    // .catch(error => {
-    //     console.log(error);
-    // });
 });
 
 app.use(express.json())

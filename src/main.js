@@ -28,10 +28,10 @@ $(function() {
     ar = a.split("_");
     username = ar[0];
     var token = 'eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJpc3MiOiJodHRwOlwvXC9sb2NhbGhvc3RcL3BsYXllcmR1b1wvcHVibGljXC9cL2FwaVwvbG9naW4iLCJpYXQiOjE1NjM3OTM2MDYsImV4cCI6MTU2Mzg4MDAwNiwibmJmIjoxNTYzNzkzNjA2LCJqdGkiOiJHbjU3ZlBWMEVMTEJ2c0N4Iiwic3ViIjoxLCJwcnYiOiIyM2JkNWM4OTQ5ZjYwMGFkYjM5ZTcwMWM0MDA4NzJkYjdhNTk3NmY3In0._Y3dWv42uImD537AhfhoTmc_p3SOuWCTJqxKAcTGKDE';
-    var socket = io.connect('http://localhost:3008', {
+    var socket = io.connect('http://localhost:3000', {
         query: {
             token: token,
-            uuid: 2
+            uuid: 1
         }
     });
     const addParticipantsMessage = (data) => {
@@ -63,10 +63,19 @@ $(function() {
             id = $usernameInput.val();
             console.log('room_' + username);
             socket.on('room_' + username, (data) => {
-                if (data.type == 6) {
+                if (data.type == 5) {
                     addChatTyping(data);
-                } else if (data.type == 7) {
+                } else if (data.type == 6) {
                     removeChatTyping(data);
+                } else if (data.type == 2) {
+                    console.log(data);
+                    console.log(data.data);
+                    data = {
+                        message: data.messages[0].message,
+                        username: toId,
+                        user_to: toId
+                    }
+                    addChatMessage(data);
                 } else {
                     console.log(data);
                     console.log(data.data);

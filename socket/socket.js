@@ -1,6 +1,7 @@
 var numUsers = 0;
 // var axios = require('axios');
-var callApi = require('./../helpers/api');
+var callApi = require('./../libraries/api');
+const consant = require('./../libraries/constants');
 
 module.exports = (io) => {
     io.use(async function(socket, next) {
@@ -8,7 +9,7 @@ module.exports = (io) => {
         let userId = socket.handshake.query.uuid;
         response = await callApi(
             'post',
-            'http://localhost/playerduo/public/api/socket/authentication/check',
+            consant.API_AUTHENTICATION,
             {
                 user_id: userId
             },
@@ -31,7 +32,7 @@ module.exports = (io) => {
         socket.on('new message', async (data) => {
             response = await callApi(
                 'post',
-                'http://localhost/playerduo/public/api/send-message',
+                consant.API_SEND_MESSAGE,
                 data,
                 {
                     'Authorization' : 'bearer ' + data.token
@@ -63,7 +64,7 @@ module.exports = (io) => {
         socket.on('typing', (data) => {
             socket.broadcast.emit('room_' + data.user_to, {
                 username: socket.username,
-                type: 6
+                type: consant.BROADCAST_TYPE_TYPING
             });
         });
 
@@ -71,7 +72,7 @@ module.exports = (io) => {
         socket.on('stop typing', (data) => {
             socket.broadcast.emit('room_' + data.user_to, {
                 username: socket.username,
-                type: 7
+                type: consant.BROADCAST_TYPE_STOP_TYPING
             });
         });
 
