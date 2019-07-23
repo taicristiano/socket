@@ -23,8 +23,17 @@ $(function() {
     var lastTypingTime;
     var $currentInput = $usernameInput.focus();
 
-    var socket = io();
-
+    // var socket = io();
+    var a = $usernameInput.val().trim();
+    ar = a.split("_");
+    username = ar[0];
+    var token = 'eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJpc3MiOiJodHRwOlwvXC9sb2NhbGhvc3RcL3BsYXllcmR1b1wvcHVibGljXC9cL2FwaVwvbG9naW4iLCJpYXQiOjE1NjM3OTM2MDYsImV4cCI6MTU2Mzg4MDAwNiwibmJmIjoxNTYzNzkzNjA2LCJqdGkiOiJHbjU3ZlBWMEVMTEJ2c0N4Iiwic3ViIjoxLCJwcnYiOiIyM2JkNWM4OTQ5ZjYwMGFkYjM5ZTcwMWM0MDA4NzJkYjdhNTk3NmY3In0._Y3dWv42uImD537AhfhoTmc_p3SOuWCTJqxKAcTGKDE';
+    var socket = io.connect('http://localhost:3008', {
+        query: {
+            token: token,
+            uuid: 2
+        }
+    });
     const addParticipantsMessage = (data) => {
         var message = '';
         if (data.numUsers === 1) {
@@ -52,9 +61,22 @@ $(function() {
             socket.emit('add user', username);
 
             id = $usernameInput.val();
-            console.log('id ' + id);
-            socket.on('room_' + ar[0], (data) => {
-                addChatMessage(data);
+            console.log('room_' + username);
+            socket.on('room_' + username, (data) => {
+                if (data.type == 6) {
+                    addChatTyping(data);
+                } else if (data.type == 7) {
+                    removeChatTyping(data);
+                } else {
+                    console.log(data);
+                    console.log(data.data);
+                    data = {
+                        message: data.data.messages[0].message,
+                        username: toId,
+                        user_to: toId
+                    }
+                    addChatMessage(data);
+                }
             });
         }
     }
@@ -76,7 +98,8 @@ $(function() {
             socket.emit('new message', {
                 username: username,
                 message: message,
-                user_to: toId
+                user_id_receive: toId,
+                token: 'eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJpc3MiOiJodHRwOlwvXC9sb2NhbGhvc3RcL3BsYXllcmR1b1wvcHVibGljXC9cL2FwaVwvbG9naW4iLCJpYXQiOjE1NjM3OTM2MDYsImV4cCI6MTU2Mzg4MDAwNiwibmJmIjoxNTYzNzkzNjA2LCJqdGkiOiJHbjU3ZlBWMEVMTEJ2c0N4Iiwic3ViIjoxLCJwcnYiOiIyM2JkNWM4OTQ5ZjYwMGFkYjM5ZTcwMWM0MDA4NzJkYjdhNTk3NmY3In0._Y3dWv42uImD537AhfhoTmc_p3SOuWCTJqxKAcTGKDE'
             });
         }
     }
@@ -165,9 +188,11 @@ $(function() {
     // Updates the typing event
     const updateTyping = () => {
         if (connected) {
+            var a = cleanInput($usernameInput.val().trim());
+            arr = a.split("_");
             if (!typing) {
                 typing = true;
-                socket.emit('typing');
+                socket.emit('typing', {username: arr[0], user_to: arr[1]});
             }
             lastTypingTime = (new Date()).getTime();
 
@@ -175,7 +200,7 @@ $(function() {
                 var typingTimer = (new Date()).getTime();
                 var timeDiff = typingTimer - lastTypingTime;
                 if (timeDiff >= TYPING_TIMER_LENGTH && typing) {
-                    socket.emit('stop typing');
+                    socket.emit('stop typing', {username: arr[0], user_to: arr[1]});
                     typing = false;
                 }
             }, TYPING_TIMER_LENGTH);
@@ -204,6 +229,8 @@ $(function() {
     // Keyboard events
 
     $window.keydown(event => {
+        var a = cleanInput($usernameInput.val().trim());
+        arr = a.split("_");
         // Auto-focus the current input when a key is typed
         if (!(event.ctrlKey || event.metaKey || event.altKey)) {
             $currentInput.focus();
@@ -212,7 +239,7 @@ $(function() {
         if (event.which === 13) {
             if (username) {
                 sendMessage();
-                socket.emit('stop typing');
+                socket.emit('stop typing', {username: arr[0], user_to: arr[1]});
                 typing = false;
             } else {
                 setUsername();
@@ -273,14 +300,14 @@ $(function() {
     });
 
     // Whenever the server emits 'typing', show the typing message
-    socket.on('typing', (data) => {
-        addChatTyping(data);
-    });
+    // socket.on('typing', (data) => {
+    //     addChatTyping(data);
+    // });
 
-    // Whenever the server emits 'stop typing', kill the typing message
-    socket.on('stop typing', (data) => {
-        removeChatTyping(data);
-    });
+    // // Whenever the server emits 'stop typing', kill the typing message
+    // socket.on('stop typing', (data) => {
+    //     removeChatTyping(data);
+    // });
 
     socket.on('disconnect', () => {
         log('you have been disconnected');

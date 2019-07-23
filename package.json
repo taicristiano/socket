@@ -16,11 +16,8 @@
     "start": "node index.js"
   },
   "license": "MIT",
-  "repository": {
-    "type": "git",
-    "url": "git://github.com/socketio/socket.io"
-  },
   "dependencies": {
+    "axios": "^0.19.0",
     "debug": "~4.1.0",
     "engine.io": "~3.3.1",
     "express": "^4.17.1",
